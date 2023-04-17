@@ -8,6 +8,5 @@ RUN npm i --omit=dev
 
 COPY . .
 
-EXPOSE 8080
 
 CMD [ "npm", "run" , "start"]
