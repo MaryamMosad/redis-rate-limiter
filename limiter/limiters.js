@@ -1,5 +1,6 @@
 const FixedWindowLimiter = require("./fixed-window-limiter");
 const TokenBucketLimiter = require("./token-bucket-limiter");
+const LeakyBucketLimiter = require("./leaky-bucket-limiter");
 
 const limiterFn = (limiterClass, nameSpace) => {
   return async (req, res, next) => {
@@ -35,8 +36,10 @@ const limiterFn = (limiterClass, nameSpace) => {
 
 const fixedWindowLimiter = new FixedWindowLimiter(10);
 const tokenBucketLimiter = new TokenBucketLimiter(10, 1);
+const leakyBucketLimiter = new LeakyBucketLimiter(10, 1);
 
 module.exports = {
   fixedWindowLimiter: limiterFn(fixedWindowLimiter, "fixed:window"),
   tokenBucketLimiter: limiterFn(tokenBucketLimiter, "token:bucket"),
+  leakyBucketLimiter: limiterFn(leakyBucketLimiter, "leaky:bucket"),
 };
