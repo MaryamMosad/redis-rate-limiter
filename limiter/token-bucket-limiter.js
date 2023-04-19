@@ -7,6 +7,9 @@ class TokenBucketLimiter {
   }
 
   async handleLimit(key) {
+    let isBlocked = false,
+      retryAfterInMilli = null;
+
     const lastResetKey = `${key}:last:updated`,
       tokenBucketKey = `${key}:count`;
     const lastReset = await redis.get(lastResetKey);
@@ -17,11 +20,24 @@ class TokenBucketLimiter {
       await redis.set(tokenBucketKey, this.limit);
     }
 
-    const tokensLeft = await redis.get(tokenBucketKey);
+    let tokensLeft = await redis.get(tokenBucketKey);
 
-    if (tokensLeft <= 0) throw new Error("Rate Limited");
+    if (tokensLeft <= 0) {
+      isBlocked = true;
+      retryAfterInMilli = this.ttl * 1000 - (new Date().getTime() - lastReset);
+    }
 
-    redis.decrby(tokenBucketKey, 1);
+    if (!isBlocked) {
+      tokensLeft = await redis.decrby(tokenBucketKey, 1);
+    }
+
+    return {
+      isBlocked,
+      retryAfterInMilli,
+      remainingRequests: tokensLeft,
+      limit: this.limit,
+      windowLimitInSec: this.ttl,
+    };
   }
 }
 module.exports = TokenBucketLimiter;
