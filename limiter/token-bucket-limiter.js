@@ -16,8 +16,10 @@ class TokenBucketLimiter {
     if (new Date().getTime() - lastReset >= this.ttl * 1000) {
       console.log("Blocking interval passed , Refilling...");
 
+      await redis.multi({ pipeline: false });
       await redis.set(lastResetKey, new Date().getTime());
       await redis.set(tokenBucketKey, this.limit);
+      await redis.exec();
     }
 
     let tokensLeft = await redis.get(tokenBucketKey);

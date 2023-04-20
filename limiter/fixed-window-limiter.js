@@ -22,9 +22,13 @@ class FixedWindowLimiterss {
     }
 
     if (!isBlocked) {
-      currentLimitation = await redis.incrby(currentKey, 1);
-
+      await redis.multi({ pipeline: false });
+      await redis.incrby(currentKey, 1);
       await redis.expire(currentKey, this.ttl);
+      await redis.exec((err, result) => {
+        currentLimitation = result[0][1];
+        if (err) console.log(err);
+      });
     }
 
     return {
